@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\Admin\AdminAuthController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\AuthorAPIController;
 use App\Http\Controllers\API\RegisterController;
@@ -37,3 +38,7 @@ Route::middleware('auth:api')->group(function () {
     });
 });
 
+Route::post('admin/register', [AdminAuthController::class, 'register']);
+Route::middleware('auth:admin')->group(function () {
+    Route::get('admin/index', [AdminAuthController::class, 'index']);
+});

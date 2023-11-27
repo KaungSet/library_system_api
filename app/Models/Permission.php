@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class BookCategory extends Model
+class Permission extends Model
 {
     use HasFactory;
-    protected $table = 'book_category';
+    protected $table = 'permissions';
     protected $fillable = [
-        'book_id',
-        'category_id',
+        'name',
+        'permission_group_id',
     ];
 }

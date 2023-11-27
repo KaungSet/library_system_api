@@ -13,14 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('book_category', function (Blueprint $table) {
+        Schema::create('permission_groups', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('book_id');
-            $table->unsignedBigInteger('category_id');
+            $table->string('name');
             $table->timestamps();
-
-            $table->foreign('book_id')->references('id')->on('books')->cascadeOnDelete();
-            $table->foreign('category_id')->references('id')->on('categories')->cascadeOnDelete();
         });
     }
 
@@ -31,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('book_categories');
+        Schema::dropIfExists('permission_groups');
     }
 };

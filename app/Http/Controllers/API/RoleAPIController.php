@@ -4,13 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Actions\HandlerResponse;
 use App\Http\Controllers\Controller;
-use App\Models\Author;
-use App\Models\Book;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
-class AuthorAPIController extends Controller
+class RoleAPIController extends Controller
 {
     use HandlerResponse;
     /**
@@ -20,8 +18,8 @@ class AuthorAPIController extends Controller
      */
     public function index()
     {
-        $authors = Author::orderByDesc('id')->get();
-        return $this->responseCollection(data: $authors);
+        $roles = Role::orderByDesc('id')->get();
+        return $this->responseCollection(data: $roles);
     }
 
     /**
@@ -42,16 +40,18 @@ class AuthorAPIController extends Controller
      */
     public function store(Request $request)
     {
+        // return $request->all();
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'unique:authors'],
+            'name' => ['required', 'unique:roles'],
         ]);
 
         if ($validator->fails()) {
             return $this->responseValidationErrors([$validator->errors()]);
         }
         $request['created_by'] = auth()->guard('api')->user()->id;
-        $author = Author::create($request->all());
-        return $this->responseSuccess(data: $author, message: "Author Created Successfully");
+        $role = Role::create($request->all());
+        $role->permissions()->sync(json_decode($request->permissions));
+        return $this->responseSuccess(data: $role, message: "Role Created Successfully");
     }
 
     /**
@@ -83,21 +83,13 @@ class AuthorAPIController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Author $author)
+    public function update(Request $request, Role $role)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => [
-                'required',
-                Rule::unique('authors', 'name')->ignore($request->author),
-            ],
-        ]);
+        $role->update($request->all());
 
-        if ($validator->fails()) {
-            return $this->responseValidationErrors([$validator->errors()]);
-        }
-        $author->update($request->all());
+        $role->permissions()->sync(json_decode($request->permissions));
 
-        return $this->responseSuccess(data: $author, message: "Author Updated Successfully");
+        return $this->responseSuccess(data: $role, message: "Role Updated Successfully");
     }
 
     /**
@@ -106,18 +98,8 @@ class AuthorAPIController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Author $author)
+    public function destroy($id)
     {
-        $is_exist = Book::where('author_id', $author->id)->first();
-
-        if ($is_exist) {
-            return $this->responseUnprocessable(
-                status_code: 422,
-                message: "Sorry, you cannot delete this record.!",
-            );
-        } else {
-            $author->delete();
-            return $this->responseSuccessMessage(message: 'Author Deleted Successfully.', status_code: 201);
-        }
+        //
     }
 }

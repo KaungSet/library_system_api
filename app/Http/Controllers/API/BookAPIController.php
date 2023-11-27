@@ -4,13 +4,13 @@ namespace App\Http\Controllers\API;
 
 use App\Actions\HandlerResponse;
 use App\Http\Controllers\Controller;
-use App\Models\Author;
 use App\Models\Book;
+use App\Models\BookCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class AuthorAPIController extends Controller
+class BookAPIController extends Controller
 {
     use HandlerResponse;
     /**
@@ -20,8 +20,8 @@ class AuthorAPIController extends Controller
      */
     public function index()
     {
-        $authors = Author::orderByDesc('id')->get();
-        return $this->responseCollection(data: $authors);
+        $books = Book::orderByDesc('id')->get();
+        return $this->responseCollection(data: $books);
     }
 
     /**
@@ -43,15 +43,20 @@ class AuthorAPIController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'unique:authors'],
+            'title' => ['required', 'unique:books'],
+            'isbn' => ['required', 'unique:books'],
+            'author_id' => ['required'],
+            'published_date' => ['required'],
+            'categories' => ['required'],
         ]);
 
         if ($validator->fails()) {
             return $this->responseValidationErrors([$validator->errors()]);
         }
         $request['created_by'] = auth()->guard('api')->user()->id;
-        $author = Author::create($request->all());
-        return $this->responseSuccess(data: $author, message: "Author Created Successfully");
+        $book = Book::create($request->all());
+        $book->categories()->sync(json_decode($request->categories));
+        return $this->responseSuccess(data: $book, message: "Book Created Successfully");
     }
 
     /**
@@ -83,21 +88,29 @@ class AuthorAPIController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Author $author)
+    public function update(Request $request, Book $book)
     {
         $validator = Validator::make($request->all(), [
-            'name' => [
+            'title' => [
                 'required',
-                Rule::unique('authors', 'name')->ignore($request->author),
+                Rule::unique('books', 'title')->ignore($request->book),
             ],
+            'isbn' => [
+                'required',
+                Rule::unique('books', 'isbn')->ignore($request->book),
+            ],
+            'author_id' => ['required'],
+            'published_date' => ['required'],
+            'categories' => ['required'],
         ]);
 
         if ($validator->fails()) {
             return $this->responseValidationErrors([$validator->errors()]);
         }
-        $author->update($request->all());
 
-        return $this->responseSuccess(data: $author, message: "Author Updated Successfully");
+        $book->update($request->all());
+        $book->categories()->sync(json_decode($request->categories));
+        return $this->responseSuccess(data: $book, message: "Book Updated Successfully");
     }
 
     /**
@@ -106,9 +119,9 @@ class AuthorAPIController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Author $author)
+    public function destroy(Book $book)
     {
-        $is_exist = Book::where('author_id', $author->id)->first();
+        $is_exist = BookCategory::where('book_id', $book->id)->first();
 
         if ($is_exist) {
             return $this->responseUnprocessable(
@@ -116,8 +129,8 @@ class AuthorAPIController extends Controller
                 message: "Sorry, you cannot delete this record.!",
             );
         } else {
-            $author->delete();
-            return $this->responseSuccessMessage(message: 'Author Deleted Successfully.', status_code: 201);
+            $book->delete();
+            return $this->responseSuccessMessage(message: 'Book Deleted Successfully.', status_code: 201);
         }
     }
 }

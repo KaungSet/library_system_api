@@ -5,16 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class BookUser extends Model
+class Role extends Model
 {
     use HasFactory;
-    protected $table = 'book_user';
+    protected $table = 'roles';
     protected $fillable = [
-        'book_id',
-        'user_id',
-        'checkout_date',
-        'return_date',
-        'description',
+        'name',
         'created_by',
     ];
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class)->withTimestamps();
+    }
 }

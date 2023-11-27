@@ -4,13 +4,13 @@ namespace App\Http\Controllers\API;
 
 use App\Actions\HandlerResponse;
 use App\Http\Controllers\Controller;
-use App\Models\Author;
-use App\Models\Book;
+use App\Models\BookCategory;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class AuthorAPIController extends Controller
+class CategoryAPIController extends Controller
 {
     use HandlerResponse;
     /**
@@ -20,8 +20,8 @@ class AuthorAPIController extends Controller
      */
     public function index()
     {
-        $authors = Author::orderByDesc('id')->get();
-        return $this->responseCollection(data: $authors);
+        $categories = Category::orderByDesc('id')->get();
+        return $this->responseCollection(data: $categories);
     }
 
     /**
@@ -43,15 +43,15 @@ class AuthorAPIController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'unique:authors'],
+            'name' => ['required', 'unique:categories'],
         ]);
 
         if ($validator->fails()) {
             return $this->responseValidationErrors([$validator->errors()]);
         }
         $request['created_by'] = auth()->guard('api')->user()->id;
-        $author = Author::create($request->all());
-        return $this->responseSuccess(data: $author, message: "Author Created Successfully");
+        $category = Category::create($request->all());
+        return $this->responseSuccess(data: $category, message: "Category Created Successfully");
     }
 
     /**
@@ -83,21 +83,22 @@ class AuthorAPIController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Author $author)
+    public function update(Request $request, Category $category)
     {
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required',
-                Rule::unique('authors', 'name')->ignore($request->author),
+                Rule::unique('categories', 'name')->ignore($request->category),
             ],
         ]);
 
         if ($validator->fails()) {
             return $this->responseValidationErrors([$validator->errors()]);
         }
-        $author->update($request->all());
 
-        return $this->responseSuccess(data: $author, message: "Author Updated Successfully");
+        $category->update($request->all());
+
+        return $this->responseSuccess(data: $category, message: "Author Updated Successfully");
     }
 
     /**
@@ -106,9 +107,9 @@ class AuthorAPIController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Author $author)
+    public function destroy(Category $category)
     {
-        $is_exist = Book::where('author_id', $author->id)->first();
+        $is_exist = BookCategory::where('category_id', $category->id)->first();
 
         if ($is_exist) {
             return $this->responseUnprocessable(
@@ -116,8 +117,8 @@ class AuthorAPIController extends Controller
                 message: "Sorry, you cannot delete this record.!",
             );
         } else {
-            $author->delete();
-            return $this->responseSuccessMessage(message: 'Author Deleted Successfully.', status_code: 201);
+            $category->delete();
+            return $this->responseSuccessMessage(message: 'Category Deleted Successfully.', status_code: 201);
         }
     }
 }

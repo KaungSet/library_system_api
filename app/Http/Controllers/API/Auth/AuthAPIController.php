@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\API\Auth;
 
 use App\Actions\HandlerResponse;
 use App\Http\Controllers\Controller;
@@ -16,9 +16,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
-class AuthController extends Controller
+class AuthAPIController extends Controller
 {
     use HandlerResponse;
+
     public function login(LoginRequest $request)
     {
         $user = User::whereName($request->name)->first();
@@ -37,7 +38,6 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken($user->name)->accessToken;
-
         return response()->json([
             'token' => $token,
             'user' => new UserResource($user),

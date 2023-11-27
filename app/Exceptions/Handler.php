@@ -3,6 +3,9 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Validation\UnauthorizedException;
+use Illuminate\Support\Str;
+use Illuminate\Auth\AuthenticationException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -46,5 +49,21 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        if ($request->expectsJson()) {
+
+            throw new UnauthorizedException();
+        }
+
+        // Check if the route is an API route
+        if (Str::startsWith($request->route()->getPrefix(), 'api')) {
+
+            throw new UnauthorizedException();
+        }
+
+        return redirect()->guest(route('login'));
     }
 }
